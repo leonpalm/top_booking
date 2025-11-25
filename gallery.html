@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空间展示 - 静谧山居</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #F8F6F0;
+            --primary-text: #2D3748;
+            --accent-color: #4A9B8E;
+            --secondary-bg: #E2E8F0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+        }
+        
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .nav-bottom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+        
+        .nav-item:hover {
+            color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .gallery-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .play-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .play-button:hover {
+            transform: scale(1.1);
+            background: white;
+        }
+        
+        .room-detail {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+        
+        .facility-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .facility-item:last-child {
+            border-bottom: none;
+        }
+        
+        .splide__slide img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-color), #6BB6A8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .splide__slide img {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="font-display text-2xl font-bold text-gray-800">空间展示</h1>
+                <button onclick="window.location.href='index.html'" class="text-gray-600 hover:text-teal-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Gallery Carousel -->
+    <section class="py-8 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="splide" id="main-gallery">
+                <div class="splide__track">
+                    <ul class="splide__list">
+                        <li class="splide__slide">
+                            <img src="https://kimi-web-img.moonshot.cn/img/nextluxury.com/dc2eaf346839acaf04a3330aef083b123355d6bf.jpg" alt="现代壁炉设计" onclick="openFullscreen(this.src)">
+                            <div class="p-4 text-center">
+                                <h3 class="font-display text-xl font-semibold mb-2">温馨客厅</h3>
+                                <p class="text-gray-600 text-sm">现代壁炉设计，营造温暖舒适的氛围</p>
+                            </div>
+                        </li>
+                        <li class="splide__slide">
+                            <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/a5353a70a0d260bf3248e849b196f4c584c5aeae.jpg" alt="舒适客厅" onclick="openFullscreen(this.src)">
+                            <div class="p-4 text-center">
+                                <h3 class="font-display text-xl font-semibold mb-2">明亮空间</h3>
+                                <p class="text-gray-600 text-sm">充足的自然光线，让空间更加通透</p>
+                            </div>
+                        </li>
+                        <li class="splide__slide">
+                            <img src="https://kimi-web-img.moonshot.cn/img/www.bhg.com/821ab6e9f73f0e1c5e1a04bcc71c9b997f89cbe5.jpg" alt="户外露台" onclick="openFullscreen(this.src)">
+                            <div class="p-4 text-center">
+                                <h3 class="font-display text-xl font-semibold mb-2">户外露台</h3>
+                                <p class="text-gray-600 text-sm">享受户外用餐和休闲的完美空间</p>
+                            </div>
+                        </li>
+                        <li class="splide__slide">
+                            <img src="https://kimi-web-img.moonshot.cn/img/urbanbilly.com/c7246b441df5cc43ffa15971f39c17af0423ad99.jpg" alt="天然木质家具" onclick="openFullscreen(this.src)">
+                            <div class="p-4 text-center">
+                                <h3 class="font-display text-xl font-semibold mb-2">天然材质</h3>
+                                <p class="text-gray-600 text-sm">精选天然木材，回归自然的触感</p>
+                            </div>
+                        </li>
+                        <li class="splide__slide">
+                            <img src="https://kimi-web-img.moonshot.cn/img/i.pinimg.com/7b7fd0159bbd784fd15fedafa287fd1b71e7961b.jpg" alt="阅读角落" onclick="openFullscreen(this.src)">
+                            <div class="p-4 text-center">
+                                <h3 class="font-display text-xl font-semibold mb-2">阅读角落</h3>
+                                <p class="text-gray-600 text-sm">安静的角落，享受阅读的时光</p>
+                            </div>
+                        </li>
+                        <li class="splide__slide">
+                            <img src="https://kimi-web-img.moonshot.cn/img/decorilla.com/2ff14061b16f70eb6d3cec068029cee0b3bd68c9.jpg" alt="极简装饰" onclick="openFullscreen(this.src)">
+                            <div class="p-4 text-center">
+                                <h3 class="font-display text-xl font-semibold mb-2">极简美学</h3>
+                                <p class="text-gray-600 text-sm">简约而不简单，每个细节都经过精心设计</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <section class="py-8 px-4 bg-white">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="section-title font-display text-center mb-8">民宿介绍视频</h2>
+            <div class="video-container">
+                <video id="introVideo" class="absolute inset-0 w-full h-full object-cover" playsinline preload="metadata" poster="media/poster.jpg" controls muted>
+                    <source src="media/intro.mp4" type="video/mp4">
+                    <source src="media/intro.webm" type="video/webm">
+                    您的浏览器不支持视频播放。<a href="media/intro.mp4">下载视频</a>
+                </video>
+            </div>
+            <div class="text-center mt-4">
+                <p class="text-gray-600">点击播放，感受静谧山居的独特魅力</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Room Details -->
+    <section class="py-8 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="section-title font-display text-center mb-8">房间详情</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Master Bedroom -->
+                <div class="room-detail">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-xl font-semibold">主卧室</h3>
+                            <p class="text-gray-600 text-sm">25平方米 · 可容纳2人</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        宽敞明亮的主卧室，配备舒适的双人床和现代化设施。大窗户提供充足的自然光线，让您在宁静的环境中享受优质睡眠。
+                    </p>
+                    <div class="space-y-2">
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-teal-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                            </svg>
+                            <span class="text-sm">1.8米双人床</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-teal-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                            </svg>
+                            <span class="text-sm">独立卫浴</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-teal-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/>
+                            </svg>
+                            <span class="text-sm">空调暖气</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-teal-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                            </svg>
+                            <span class="text-sm">山景阳台</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Living Room -->
+                <div class="room-detail">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-xl font-semibold">客厅</h3>
+                            <p class="text-gray-600 text-sm">30平方米 · 开放式空间</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        宽敞明亮的开放式客厅，配备舒适的沙发和现代壁炉。这里是家人朋友聚会的理想场所，也是享受安静阅读时光的完美空间。
+                    </p>
+                    <div class="space-y-2">
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-blue-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/>
+                            </svg>
+                            <span class="text-sm">智能电视</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-blue-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            <span class="text-sm">现代壁炉</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-blue-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/>
+                            </svg>
+                            <span class="text-sm">舒适沙发</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-blue-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            <span class="text-sm">图书角</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kitchen -->
+                <div class="room-detail">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.20-1.10-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-xl font-semibold">厨房</h3>
+                            <p class="text-gray-600 text-sm">15平方米 · 设备齐全</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        现代化厨房配备齐全的厨具和电器，让您在旅途中也能享受烹饪的乐趣。精选的食材和调料，为您的创意料理提供支持。
+                    </p>
+                    <div class="space-y-2">
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            <span class="text-sm">电磁炉</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                            </svg>
+                            <span class="text-sm">冰箱微波炉</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            <span class="text-sm">全套厨具</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                            </svg>
+                            <span class="text-sm">净水设备</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outdoor Area -->
+                <div class="room-detail">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-xl font-semibold">户外空间</h3>
+                            <p class="text-gray-600 text-sm">50平方米 · 花园露台</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        私密的户外花园和露台，配备了舒适的户外家具。这里是享受早餐、阅读或者观星的完美场所，让您与自然亲密接触。
+                    </p>
+                    <div class="space-y-2">
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-yellow-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            <span class="text-sm">户外餐桌</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-yellow-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            <span class="text-sm">休闲座椅</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-yellow-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.20-1.10-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
+                            </svg>
+                            <span class="text-sm">绿植花园</span>
+                        </div>
+                        <div class="facility-item">
+                            <svg class="w-5 h-5 text-yellow-600 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                            </svg>
+                            <span class="text-sm">烧烤设备</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fullscreen Modal -->
+    <div id="fullscreenModal" class="fullscreen-modal">
+        <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
+        <img id="fullscreenImage" class="fullscreen-image" src="" alt="">
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 nav-bottom z-50">
+        <div class="flex justify-around items-center py-3 px-4">
+            <a href="index.html" class="nav-item flex flex-col items-center">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="gallery.html" class="nav-item active flex flex-col items-center">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/>
+                </svg>
+                <span class="text-xs">画廊</span>
+            </a>
+            <a href="booking.html" class="nav-item flex flex-col items-center">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                </svg>
+                <span class="text-xs">预定</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Add bottom padding -->
+    <div class="h-20"></div>
+
+    <script>
+        // Initialize Splide carousel
+        document.addEventListener('DOMContentLoaded', function() {
+            new Splide('#main-gallery', {
+                type: 'loop',
+                perPage: 3,
+                perMove: 1,
+                gap: '1rem',
+                autoplay: true,
+                interval: 4000,
+                pauseOnHover: true,
+                breakpoints: {
+                    768: {
+                        perPage: 1,
+                    },
+                    1024: {
+                        perPage: 2,
+                    }
+                }
+            }).mount();
+            
+            // Animate room details on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        anime({
+                            targets: entry.target,
+                            translateY: [50, 0],
+                            opacity: [0, 1],
+                            easing: 'easeOutExpo',
+                            duration: 800
+                        });
+                    }
+                });
+            }, observerOptions);
+            
+            document.querySelectorAll('.room-detail').forEach(el => {
+                observer.observe(el);
+            });
+        });
+        
+        // Fullscreen functionality
+        function openFullscreen(src) {
+            document.getElementById('fullscreenImage').src = src;
+            document.getElementById('fullscreenModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeFullscreen() {
+            document.getElementById('fullscreenModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Video functionality (try to play the intro video if present)
+        function playVideo() {
+            const v = document.getElementById('introVideo');
+            if (v) {
+                // If previously muted for autoplay, unmute on user intent
+                v.muted = false;
+                v.play().catch(() => {
+                    // If autoplay is blocked, ensure controls are visible
+                    v.controls = true;
+                });
+            } else {
+                alert('视频播放功能将在实际部署时添加');
+            }
+        }
+        
+        // Close fullscreen on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+            }
+        });
+        
+        // Close fullscreen on background click
+        document.getElementById('fullscreenModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>

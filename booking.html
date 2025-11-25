@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预定房间 - 静谧山居</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #F8F6F0;
+            --primary-text: #2D3748;
+            --accent-color: #4A9B8E;
+            --secondary-bg: #E2E8F0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+        }
+        
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .nav-bottom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+        
+        .nav-item:hover {
+            color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .booking-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .booking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .form-input {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(74, 155, 142, 0.1);
+        }
+        
+        .form-input.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .room-type-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .room-type-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .room-type-card.selected {
+            border-color: var(--accent-color);
+            background: rgba(74, 155, 142, 0.05);
+        }
+        
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            background: #3a8b7e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 155, 142, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .price-display {
+            background: linear-gradient(135deg, var(--accent-color), #6BB6A8);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            color: #9ca3af;
+        }
+        
+        .step.active {
+            color: var(--accent-color);
+        }
+        
+        .step.completed {
+            color: #10b981;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        .step.active .step-number {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-connector {
+            width: 40px;
+            height: 2px;
+            background: #e5e7eb;
+            margin: 0 16px;
+        }
+        
+        .step.completed + .step-connector {
+            background: #10b981;
+        }
+        
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .success-content {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .step-indicator {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .step-connector {
+                width: 2px;
+                height: 20px;
+                margin: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="font-display text-2xl font-bold text-gray-800">预定房间</h1>
+                <button onclick="window.location.href='index.html'" class="text-gray-600 hover:text-teal-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="py-8 px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <div class="step-number">1</div>
+                    <span>选择日期</span>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <span>房间选择</span>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <span>联系信息</span>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" id="step4">
+                    <div class="step-number">4</div>
+                    <span>确认预定</span>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="booking-card p-6 md:p-8">
+                <!-- Step 1: Date Selection -->
+                <div id="dateSelection" class="booking-step">
+                    <h2 class="font-display text-2xl font-bold mb-6 text-center">选择入住日期</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-gray-700">入住日期</label>
+                            <input type="date" id="checkinDate" class="form-input w-full" onchange="updateDates()">
+                            <div id="checkinError" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-gray-700">退房日期</label>
+                            <input type="date" id="checkoutDate" class="form-input w-full" onchange="updateDates()">
+                            <div id="checkoutError" class="error-message"></div>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <div id="dateChart" style="height: 300px;"></div>
+                    </div>
+                    <div class="text-center mt-6">
+                        <button onclick="nextStep(2)" class="btn-primary">下一步：选择房间</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Room Selection -->
+                <div id="roomSelection" class="booking-step" style="display: none;">
+                    <h2 class="font-display text-2xl font-bold mb-6 text-center">选择房间类型</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="room-type-card" onclick="selectRoomType('standard', 680)">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg">标准间</h3>
+                                    <p class="text-gray-600 text-sm">25平方米 · 山景阳台</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">舒适的标准间，配备现代化设施，适合情侣或小家庭入住。</p>
+                            <div class="text-right">
+                                <span class="text-2xl font-bold text-teal-600">¥680</span>
+                                <span class="text-gray-500 text-sm">/晚</span>
+                            </div>
+                        </div>
+
+                        <div class="room-type-card" onclick="selectRoomType('deluxe', 880)">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg">豪华套房</h3>
+                                    <p class="text-gray-600 text-sm">40平方米 · 独立客厅</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">宽敞的豪华套房，带有独立客厅和用餐区，适合家庭或商务客人。</p>
+                            <div class="text-right">
+                                <span class="text-2xl font-bold text-blue-600">¥880</span>
+                                <span class="text-gray-500 text-sm">/晚</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">入住人数</label>
+                        <select id="guestCount" class="form-input w-full" onchange="updatePrice()">
+                            <option value="1">1人</option>
+                            <option value="2" selected>2人</option>
+                            <option value="3">3人</option>
+                            <option value="4">4人</option>
+                        </select>
+                    </div>
+
+                    <div class="text-center">
+                        <button onclick="nextStep(3)" class="btn-primary">下一步：填写信息</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Contact Information -->
+                <div id="contactInfo" class="booking-step" style="display: none;">
+                    <h2 class="font-display text-2xl font-bold mb-6 text-center">联系信息</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-gray-700">姓名 *</label>
+                            <input type="text" id="guestName" class="form-input w-full" placeholder="请输入您的姓名">
+                            <div id="nameError" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-gray-700">手机号 *</label>
+                            <input type="tel" id="guestPhone" class="form-input w-full" placeholder="请输入手机号码">
+                            <div id="phoneError" class="error-message"></div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold mb-2 text-gray-700">邮箱</label>
+                            <input type="email" id="guestEmail" class="form-input w-full" placeholder="请输入邮箱地址（可选）">
+                            <div id="emailError" class="error-message"></div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold mb-2 text-gray-700">特殊要求</label>
+                            <textarea id="specialRequests" class="form-input w-full h-24" placeholder="如有特殊要求，请在此说明（可选）"></textarea>
+                        </div>
+                    </div>
+                    <div class="text-center mt-6">
+                        <button onclick="nextStep(4)" class="btn-primary">下一步：确认预定</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confirmation -->
+                <div id="confirmation" class="booking-step" style="display: none;">
+                    <h2 class="font-display text-2xl font-bold mb-6 text-center">确认预定信息</h2>
+                    
+                    <div class="booking-card p-6 mb-6">
+                        <h3 class="font-semibold text-lg mb-4">预定详情</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">入住日期：</span>
+                                <span id="confirmCheckin" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">退房日期：</span>
+                                <span id="confirmCheckout" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">房间类型：</span>
+                                <span id="confirmRoomType" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">入住人数：</span>
+                                <span id="confirmGuestCount" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">入住天数：</span>
+                                <span id="confirmNights" class="font-semibold"></span>
+                            </div>
+                            <hr class="my-4">
+                            <div class="flex justify-between text-lg font-bold">
+                                <span>总价格：</span>
+                                <span id="confirmTotalPrice" class="text-teal-600"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="booking-card p-6 mb-6">
+                        <h3 class="font-semibold text-lg mb-4">联系信息</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">姓名：</span>
+                                <span id="confirmName" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">手机号：</span>
+                                <span id="confirmPhone" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">邮箱：</span>
+                                <span id="confirmEmail" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between" id="confirmRequestsContainer" style="display: none;">
+                                <span class="text-gray-600">特殊要求：</span>
+                                <span id="confirmRequests" class="font-semibold"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center space-y-4">
+                        <button onclick="submitBooking()" class="btn-primary w-full">确认预定</button>
+                        <button onclick="prevStep(3)" class="text-gray-600 hover:text-gray-800 transition-colors">返回修改</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Display -->
+            <div class="mt-8">
+                <div class="price-display">
+                    <h3 class="text-lg font-semibold mb-2">当前价格</h3>
+                    <div class="text-3xl font-bold mb-2" id="currentPrice">¥0</div>
+                    <div class="text-sm opacity-90" id="priceDetails">请选择入住日期</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="success-modal">
+        <div class="success-content">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+            </div>
+            <h3 class="font-display text-2xl font-bold mb-4 text-gray-800">预定成功！</h3>
+            <p class="text-gray-600 mb-4">您的预定已经提交成功，我们会在24小时内与您联系确认。</p>
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <p class="text-sm text-gray-600 mb-2">订单号：<span id="bookingNumber" class="font-semibold"></span></p>
+                <p class="text-sm text-gray-600">请保存好您的订单号，以便查询</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="closeSuccessModal()" class="btn-primary w-full">确定</button>
+                <button onclick="window.location.href='index.html'" class="w-full py-3 text-gray-600 hover:text-gray-800 transition-colors">返回首页</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 nav-bottom z-50">
+        <div class="flex justify-around items-center py-3 px-4">
+            <a href="index.html" class="nav-item flex flex-col items-center">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="gallery.html" class="nav-item flex flex-col items-center">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/>
+                </svg>
+                <span class="text-xs">画廊</span>
+            </a>
+            <a href="booking.html" class="nav-item active flex flex-col items-center">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                </svg>
+                <span class="text-xs">预定</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Add bottom padding -->
+    <div class="h-20"></div>
+
+    <script>
+        // Global variables
+        let selectedRoomType = '';
+        let selectedRoomPrice = 0;
+        let currentStep = 1;
+        let dateChart = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDateInputs();
+            initializePriceChart();
+            
+            // Add input event listeners for real-time validation
+            document.getElementById('guestName').addEventListener('input', validateName);
+            document.getElementById('guestPhone').addEventListener('input', validatePhone);
+            document.getElementById('guestEmail').addEventListener('input', validateEmail);
+        });
+
+        // Initialize date inputs
+        function initializeDateInputs() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            document.getElementById('checkinDate').min = today.toISOString().split('T')[0];
+            document.getElementById('checkoutDate').min = tomorrow.toISOString().split('T')[0];
+        }
+
+        // Initialize price chart
+        function initializePriceChart() {
+            const chartDom = document.getElementById('dateChart');
+            dateChart = echarts.init(chartDom);
+            
+            const option = {
+                title: {
+                    text: '价格趋势',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 16,
+                        color: '#2D3748'
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        return params[0].name + '<br/>价格: ¥' + params[0].value;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#E2E8F0'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#64748B'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: {
+                        lineStyle: {
+                            color: '#E2E8F0'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#64748B',
+                        formatter: '¥{value}'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#F1F5F9'
+                        }
+                    }
+                },
+                series: [{
+                    data: [680, 680, 680, 680, 780, 880, 880],
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: {
+                        color: '#4A9B8E',
+                        width: 3
+                    },
+                    itemStyle: {
+                        color: '#4A9B8E'
+                    },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [{
+                                offset: 0, color: 'rgba(74, 155, 142, 0.3)'
+                            }, {
+                                offset: 1, color: 'rgba(74, 155, 142, 0.05)'
+                            }]
+                        }
+                    }
+                }]
+            };
+            
+            dateChart.setOption(option);
+        }
+
+        // Update dates and price
+        function updateDates() {
+            const checkinDate = document.getElementById('checkinDate').value;
+            const checkoutDate = document.getElementById('checkoutDate').value;
+            
+            if (checkinDate && checkoutDate) {
+                const checkin = new Date(checkinDate);
+                const checkout = new Date(checkoutDate);
+                
+                if (checkout <= checkin) {
+                    document.getElementById('checkoutError').textContent = '退房日期必须晚于入住日期';
+                    return;
+                } else {
+                    document.getElementById('checkoutError').textContent = '';
+                }
+                
+                const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+                updatePrice();
+            }
+        }
+
+        // Select room type
+        function selectRoomType(type, price) {
+            selectedRoomType = type;
+            selectedRoomPrice = price;
+            
+            // Update UI
+            document.querySelectorAll('.room-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            updatePrice();
+        }
+
+        // Update price display
+        function updatePrice() {
+            const checkinDate = document.getElementById('checkinDate').value;
+            const checkoutDate = document.getElementById('checkoutDate').value;
+            const guestCount = parseInt(document.getElementById('guestCount').value) || 2;
+            
+            if (checkinDate && checkoutDate && selectedRoomPrice > 0) {
+                const checkin = new Date(checkinDate);
+                const checkout = new Date(checkoutDate);
+                const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+                
+                let totalPrice = selectedRoomPrice * nights;
+                
+                // Additional fee for extra guests
+                if (guestCount > 2) {
+                    totalPrice += (guestCount - 2) * 100 * nights;
+                }
+                
+                document.getElementById('currentPrice').textContent = '¥' + totalPrice;
+                document.getElementById('priceDetails').textContent = 
+                    selectedRoomType === 'standard' ? '标准间 · ' : '豪华套房 · ' +
+                    nights + '晚 · ' + guestCount + '人';
+            }
+        }
+
+        // Navigation functions
+        function nextStep(step) {
+            if (validateCurrentStep()) {
+                // Hide current step
+                document.querySelectorAll('.booking-step').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                // Show next step
+                if (step === 2) {
+                    document.getElementById('roomSelection').style.display = 'block';
+                } else if (step === 3) {
+                    document.getElementById('contactInfo').style.display = 'block';
+                } else if (step === 4) {
+                    populateConfirmation();
+                    document.getElementById('confirmation').style.display = 'block';
+                }
+                
+                // Update step indicator
+                updateStepIndicator(step);
+                currentStep = step;
+                
+                // Animate step transition
+                anime({
+                    targets: '.booking-step',
+                    opacity: [0, 1],
+                    translateY: [20, 0],
+                    duration: 500,
+                    easing: 'easeOutExpo'
+                });
+            }
+        }
+
+        function prevStep(step) {
+            // Hide current step
+            document.querySelectorAll('.booking-step').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Show previous step
+            if (step === 1) {
+                document.getElementById('dateSelection').style.display = 'block';
+            } else if (step === 2) {
+                document.getElementById('roomSelection').style.display = 'block';
+            } else if (step === 3) {
+                document.getElementById('contactInfo').style.display = 'block';
+            }
+            
+            // Update step indicator
+            updateStepIndicator(step);
+            currentStep = step;
+        }
+
+        function updateStepIndicator(activeStep) {
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById('step' + i);
+                if (i < activeStep) {
+                    step.className = 'step completed';
+                } else if (i === activeStep) {
+                    step.className = 'step active';
+                } else {
+                    step.className = 'step';
+                }
+            }
+        }
+
+        // Validation functions
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                return validateDates();
+            } else if (currentStep === 2) {
+                return validateRoomSelection();
+            } else if (currentStep === 3) {
+                return validateContactInfo();
+            }
+            return true;
+        }
+
+        function validateDates() {
+            const checkinDate = document.getElementById('checkinDate').value;
+            const checkoutDate = document.getElementById('checkoutDate').value;
+            
+            let isValid = true;
+            
+            if (!checkinDate) {
+                document.getElementById('checkinError').textContent = '请选择入住日期';
+                isValid = false;
+            } else {
+                document.getElementById('checkinError').textContent = '';
+            }
+            
+            if (!checkoutDate) {
+                document.getElementById('checkoutError').textContent = '请选择退房日期';
+                isValid = false;
+            } else {
+                const checkin = new Date(checkinDate);
+                const checkout = new Date(checkoutDate);
+                if (checkout <= checkin) {
+                    document.getElementById('checkoutError').textContent = '退房日期必须晚于入住日期';
+                    isValid = false;
+                } else {
+                    document.getElementById('checkoutError').textContent = '';
+                }
+            }
+            
+            return isValid;
+        }
+
+        function validateRoomSelection() {
+            if (!selectedRoomType) {
+                alert('请选择房间类型');
+                return false;
+            }
+            return true;
+        }
+
+        function validateContactInfo() {
+            let isValid = true;
+            
+            if (!validateName()) isValid = false;
+            if (!validatePhone()) isValid = false;
+            if (!validateEmail()) isValid = false;
+            
+            return isValid;
+        }
+
+        function validateName() {
+            const name = document.getElementById('guestName').value.trim();
+            const errorEl = document.getElementById('nameError');
+            
+            if (!name) {
+                errorEl.textContent = '请输入姓名';
+                return false;
+            } else if (name.length < 2) {
+                errorEl.textContent = '姓名至少需要2个字符';
+                return false;
+            } else {
+                errorEl.textContent = '';
+                return true;
+            }
+        }
+
+        function validatePhone() {
+            const phone = document.getElementById('guestPhone').value.trim();
+            const errorEl = document.getElementById('phoneError');
+            
+            if (!phone) {
+                errorEl.textContent = '请输入手机号码';
+                return false;
+            } else if (!/^1[3-9]\d{9}$/.test(phone)) {
+                errorEl.textContent = '请输入正确的手机号码';
+                return false;
+            } else {
+                errorEl.textContent = '';
+                return true;
+            }
+        }
+
+        function validateEmail() {
+            const email = document.getElementById('guestEmail').value.trim();
+            const errorEl = document.getElementById('emailError');
+            
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errorEl.textContent = '请输入正确的邮箱地址';
+                return false;
+            } else {
+                errorEl.textContent = '';
+                return true;
+            }
+        }
+
+        // Populate confirmation
+        function populateConfirmation() {
+            const checkinDate = document.getElementById('checkinDate').value;
+            const checkoutDate = document.getElementById('checkoutDate').value;
+            const guestCount = document.getElementById('guestCount').value;
+            const name = document.getElementById('guestName').value;
+            const phone = document.getElementById('guestPhone').value;
+            const email = document.getElementById('guestEmail').value;
+            const requests = document.getElementById('specialRequests').value;
+            
+            const checkin = new Date(checkinDate);
+            const checkout = new Date(checkoutDate);
+            const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+            
+            let totalPrice = selectedRoomPrice * nights;
+            if (parseInt(guestCount) > 2) {
+                totalPrice += (parseInt(guestCount) - 2) * 100 * nights;
+            }
+            
+            // Populate confirmation fields
+            document.getElementById('confirmCheckin').textContent = formatDate(checkinDate);
+            document.getElementById('confirmCheckout').textContent = formatDate(checkoutDate);
+            document.getElementById('confirmRoomType').textContent = selectedRoomType === 'standard' ? '标准间' : '豪华套房';
+            document.getElementById('confirmGuestCount').textContent = guestCount + '人';
+            document.getElementById('confirmNights').textContent = nights + '晚';
+            document.getElementById('confirmTotalPrice').textContent = '¥' + totalPrice;
+            
+            document.getElementById('confirmName').textContent = name;
+            document.getElementById('confirmPhone').textContent = phone;
+            document.getElementById('confirmEmail').textContent = email || '未填写';
+            
+            if (requests) {
+                document.getElementById('confirmRequestsContainer').style.display = 'flex';
+                document.getElementById('confirmRequests').textContent = requests;
+            } else {
+                document.getElementById('confirmRequestsContainer').style.display = 'none';
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日';
+        }
+
+        // 统一接口地址（稳定别名）
+        const BOOKINGS_ENDPOINT = 'https://live2life.top/api/bookings';
+
+        // Submit booking（改为调用后端接口）
+        async function submitBooking() {
+            try {
+                const checkinDate = document.getElementById('checkinDate').value;
+                const checkoutDate = document.getElementById('checkoutDate').value;
+                const guestCount = document.getElementById('guestCount').value;
+                const name = document.getElementById('guestName').value;
+                const phone = document.getElementById('guestPhone').value;
+                const email = document.getElementById('guestEmail').value;
+                const requests = document.getElementById('specialRequests').value;
+
+                const checkin = new Date(checkinDate);
+                const checkout = new Date(checkoutDate);
+                const nights = Math.max(1, Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24)));
+                let totalPrice = selectedRoomPrice * nights;
+                if (parseInt(guestCount) > 2) {
+                    totalPrice += (parseInt(guestCount) - 2) * 100 * nights;
+                }
+
+                const idempotencyKey = 'web-' + Date.now().toString(36);
+
+                const payload = {
+                    checkinDate,
+                    checkoutDate,
+                    roomType: selectedRoomType || 'standard',
+                    guestCount: parseInt(guestCount),
+                    guestName: name,
+                    guestPhone: phone,
+                    guestEmail: email || null,
+                    specialRequests: requests || null,
+                    priceTotal: totalPrice,
+                    idempotencyKey
+                };
+
+                const resp = await fetch(BOOKINGS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Idempotency-Key': idempotencyKey
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    const errMsg = data?.error || '预订提交失败，请稍后重试';
+                    alert(errMsg);
+                    return;
+                }
+
+                // 使用服务端返回的订单号
+                const bookingNumber = data?.bookingNumber || ('BJ' + Date.now().toString().slice(-8));
+                document.getElementById('bookingNumber').textContent = bookingNumber;
+
+                // 展示成功弹窗
+                document.getElementById('successModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                anime({
+                    targets: '.success-content',
+                    scale: [0.8, 1],
+                    opacity: [0, 1],
+                    duration: 500,
+                    easing: 'easeOutExpo'
+                });
+            } catch (e) {
+                alert('网络异常，请稍后再试');
+            }
+        }
+
+        // Close success modal
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Reset form
+            resetForm();
+        }
+
+        // Reset form
+        function resetForm() {
+            currentStep = 1;
+            selectedRoomType = '';
+            selectedRoomPrice = 0;
+            
+            // Reset step indicator
+            updateStepIndicator(1);
+            
+            // Hide all steps except first
+            document.querySelectorAll('.booking-step').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.getElementById('dateSelection').style.display = 'block';
+            
+            // Clear form inputs
+            document.getElementById('checkinDate').value = '';
+            document.getElementById('checkoutDate').value = '';
+            document.getElementById('guestName').value = '';
+            document.getElementById('guestPhone').value = '';
+            document.getElementById('guestEmail').value = '';
+            document.getElementById('specialRequests').value = '';
+            
+            // Clear room selection
+            document.querySelectorAll('.room-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Reset price display
+            document.getElementById('currentPrice').textContent = '¥0';
+            document.getElementById('priceDetails').textContent = '请选择入住日期';
+        }
+    </script>
+</body>
+</html>
