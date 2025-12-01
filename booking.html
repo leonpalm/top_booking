@@ -885,10 +885,17 @@
         }
 
         // 统一接口地址（稳定别名）
-        const BOOKINGS_ENDPOINT = 'https://live2life.top/api/bookings';
+        const BOOKINGS_ENDPOINT = (function() {
+            const origin = (typeof location !== 'undefined' && location.origin) ? location.origin : '';
+            if (origin && origin.startsWith('http')) {
+                return origin + '/api/bookings';
+            }
+            return 'https://www.live2life.ltd/api/bookings';
+        })();
 
         // Submit booking（改为调用后端接口）
         async function submitBooking() {
+            let payload;
             try {
                 const checkinDate = document.getElementById('checkinDate').value;
                 const checkoutDate = document.getElementById('checkoutDate').value;
@@ -908,7 +915,7 @@
 
                 const idempotencyKey = 'web-' + Date.now().toString(36);
 
-                const payload = {
+                payload = {
                     checkinDate,
                     checkoutDate,
                     roomType: selectedRoomType || 'standard',
@@ -921,27 +928,17 @@
                     idempotencyKey
                 };
 
-                const resp = await fetch(BOOKINGS_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Idempotency-Key': idempotencyKey
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await resp.json().catch(() => ({}));
-                if (!resp.ok) {
-                    const errMsg = data?.error || '预订提交失败，请稍后重试';
-                    alert(errMsg);
+                if (!navigator.onLine) {
+                    queueBooking(payload);
+                    alert('当前网络不可用，已保存您的预定，将在网络恢复后自动提交');
                     return;
                 }
 
-                // 使用服务端返回的订单号
+                const data = await postBookingWithRetry(payload);
+
                 const bookingNumber = data?.bookingNumber || ('BJ' + Date.now().toString().slice(-8));
                 document.getElementById('bookingNumber').textContent = bookingNumber;
 
-                // 展示成功弹窗
                 document.getElementById('successModal').style.display = 'flex';
                 document.body.style.overflow = 'hidden';
 
@@ -953,7 +950,11 @@
                     easing: 'easeOutExpo'
                 });
             } catch (e) {
-                alert('网络异常，请稍后再试');
+                if (payload) {
+                    queueBooking(payload);
+                }
+                const msg = (e && e.message) ? e.message : '网络异常，请稍后再试';
+                alert(msg);
             }
         }
 
@@ -972,16 +973,13 @@
             selectedRoomType = '';
             selectedRoomPrice = 0;
             
-            // Reset step indicator
             updateStepIndicator(1);
             
-            // Hide all steps except first
             document.querySelectorAll('.booking-step').forEach(el => {
                 el.style.display = 'none';
             });
             document.getElementById('dateSelection').style.display = 'block';
             
-            // Clear form inputs
             document.getElementById('checkinDate').value = '';
             document.getElementById('checkoutDate').value = '';
             document.getElementById('guestName').value = '';
@@ -989,15 +987,130 @@
             document.getElementById('guestEmail').value = '';
             document.getElementById('specialRequests').value = '';
             
-            // Clear room selection
             document.querySelectorAll('.room-type-card').forEach(card => {
                 card.classList.remove('selected');
             });
             
-            // Reset price display
             document.getElementById('currentPrice').textContent = '¥0';
             document.getElementById('priceDetails').textContent = '请选择入住日期';
         }
+
+        async function postBookingWithRetry(payload) {
+            const timeoutMs = 12000;
+            let lastErr;
+            for (let i = 0; i < 2; i++) {
+                try {
+                    return await postOnceJSON(payload, timeoutMs);
+                } catch (e) {
+                    lastErr = e;
+                    if (e.status && e.status < 500) break;
+                    await new Promise(r => setTimeout(r, 800 * (i + 1)));
+                }
+            }
+            return await postOnceForm(payload, timeoutMs);
+        }
+
+        async function postOnceJSON(payload, timeoutMs) {
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const resp = await fetch(BOOKINGS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Idempotency-Key': payload.idempotencyKey
+                    },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    const err = new Error(data?.error || '预订提交失败，请稍后重试');
+                    err.status = resp.status;
+                    throw err;
+                }
+                return data;
+            } catch (e) {
+                if (e && e.name === 'AbortError') {
+                    const err = new Error('请求超时');
+                    err.network = true;
+                    throw err;
+                }
+                if (!(e && e.status)) {
+                    const err = new Error(e && e.message ? e.message : '网络异常');
+                    err.network = true;
+                    throw err;
+                }
+                throw e;
+            } finally {
+                clearTimeout(t);
+            }
+        }
+
+        async function postOnceForm(payload, timeoutMs) {
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const params = new URLSearchParams();
+                for (const k in payload) {
+                    const v = payload[k];
+                    params.append(k, v == null ? '' : String(v));
+                }
+                const resp = await fetch(BOOKINGS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params.toString(),
+                    signal: controller.signal
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    const err = new Error(data?.error || '预订提交失败，请稍后重试');
+                    err.status = resp.status;
+                    throw err;
+                }
+                return data;
+            } catch (e) {
+                if (e && e.name === 'AbortError') {
+                    const err = new Error('请求超时');
+                    err.network = true;
+                    throw err;
+                }
+                if (!(e && e.status)) {
+                    const err = new Error(e && e.message ? e.message : '网络异常');
+                    err.network = true;
+                    throw err;
+                }
+                throw e;
+            } finally {
+                clearTimeout(t);
+            }
+        }
+
+        function queueBooking(payload) {
+            const q = JSON.parse(localStorage.getItem('bookingQueue') || '[]');
+            q.push(payload);
+            localStorage.setItem('bookingQueue', JSON.stringify(q));
+        }
+
+        async function flushQueuedBookings() {
+            if (!navigator.onLine) return;
+            let q = JSON.parse(localStorage.getItem('bookingQueue') || '[]');
+            if (!q.length) return;
+            const next = [];
+            for (const p of q) {
+                try {
+                    await postBookingWithRetry(p);
+                } catch (e) {
+                    next.push(p);
+                }
+            }
+            localStorage.setItem('bookingQueue', JSON.stringify(next));
+        }
+
+        window.addEventListener('online', flushQueuedBookings);
+        document.addEventListener('DOMContentLoaded', flushQueuedBookings);
     </script>
 </body>
 </html>
