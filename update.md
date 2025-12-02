@@ -1,4 +1,9 @@
-# 更新到生产（macOS 终端执行）
+# 通过vercel关联的Github更新
+git add .
+git commit -m "changes"
+git push
+
+# 直接vercel更新到生产（macOS 终端执行）
 cd /Users/shl-macmini/Downloads/OKComputer_极简民宿预订
 npm i -g vercel
 vercel login

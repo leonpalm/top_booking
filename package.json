@@ -4,5 +4,11 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  },
+  "scripts": {
+    "optimize-images": "node scripts/optimize-images.cjs"
   }
 }
