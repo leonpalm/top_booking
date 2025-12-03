@@ -1,4 +1,4 @@
-// 静谧山居 - 主要JavaScript功能文件
+// 听海之音 - 主要JavaScript功能文件
 // 包含动画效果、交互功能和工具函数
 
 class JingjiShanju {
@@ -154,10 +154,10 @@ class JingjiShanju {
 
             getRandomColor() {
                 const colors = [
-                    'rgba(74, 155, 142, ',
-                    'rgba(107, 182, 168, ',
-                    'rgba(139, 209, 194, ',
-                    'rgba(171, 236, 220, '
+                    'rgba(30, 144, 255, ',
+                    'rgba(65, 155, 255, ',
+                    'rgba(100, 170, 255, ',
+                    'rgba(135, 185, 255, '
                 ];
                 return colors[Math.floor(Math.random() * colors.length)];
             }
@@ -222,7 +222,7 @@ class JingjiShanju {
 
                 if (distance < 100) {
                     ctx.beginPath();
-                    ctx.strokeStyle = `rgba(74, 155, 142, ${0.1 * (1 - distance / 100)})`;
+                    ctx.strokeStyle = `rgba(30, 144, 255, ${0.1 * (1 - distance / 100)})`;
                     ctx.lineWidth = 1;
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
@@ -567,7 +567,7 @@ class JingjiShanju {
 
         // 根据类型设置背景色
         const colors = {
-            info: '#4A9B8E',
+            info: '#1E90FF',
             success: '#10B981',
             warning: '#F59E0B',
             error: '#EF4444'

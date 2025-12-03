@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>预定房间 - 静谧山居</title>
+    <title>预定房间 - 听海之音</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
@@ -12,7 +12,7 @@
         :root {
             --primary-bg: #F8F6F0;
             --primary-text: #2D3748;
-            --accent-color: #4A9B8E;
+            --accent-color: #1E90FF;
             --secondary-bg: #E2E8F0;
         }
         
@@ -69,7 +69,7 @@
             outline: none;
             border-color: var(--accent-color);
             background: white;
-            box-shadow: 0 0 0 3px rgba(74, 155, 142, 0.1);
+            box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.1);
         }
         
         .form-input.error {
@@ -93,7 +93,7 @@
         
         .room-type-card.selected {
             border-color: var(--accent-color);
-            background: rgba(74, 155, 142, 0.05);
+            background: rgba(30, 144, 255, 0.05);
         }
         
         .btn-primary {
@@ -108,9 +108,9 @@
         }
         
         .btn-primary:hover {
-            background: #3a8b7e;
+            background: #1873CC;
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(74, 155, 142, 0.3);
+            box-shadow: 0 8px 25px rgba(30, 144, 255, 0.3);
         }
         
         .btn-primary:disabled {
@@ -121,7 +121,7 @@
         }
         
         .price-display {
-            background: linear-gradient(135deg, var(--accent-color), #6BB6A8);
+            background: linear-gradient(135deg, var(--accent-color), #4682B4);
             color: white;
             padding: 20px;
             border-radius: 16px;
@@ -230,7 +230,7 @@
         <div class="max-w-6xl mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
                 <h1 class="font-display text-2xl font-bold text-gray-800">预定房间</h1>
-                <button onclick="window.location.href='index.html'" class="text-gray-600 hover:text-teal-600 transition-colors">
+                <button onclick="window.location.href='index.html'" class="text-gray-600 hover:text-blue-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                     </svg>
@@ -368,7 +368,7 @@
                             <hr class="my-4">
                             <div class="flex justify-between text-lg font-bold">
                                 <span>总价格：</span>
-                                <span id="confirmTotalPrice" class="text-teal-600"></span>
+                                <span id="confirmTotalPrice" class="text-blue-600"></span>
                             </div>
                         </div>
                     </div>
@@ -536,7 +536,7 @@
             container.innerHTML = '';
             
             const colorMap = {
-                teal: { bg: 'bg-teal-100', text: 'text-teal-600' },
+                teal: { bg: 'bg-blue-100', text: 'text-blue-600' },
                 blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
                 green: { bg: 'bg-green-100', text: 'text-green-600' },
                 purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
@@ -701,11 +701,11 @@
                     type: 'line',
                     smooth: true,
                     lineStyle: {
-                        color: '#4A9B8E',
+                        color: '#1E90FF',
                         width: 3
                     },
                     itemStyle: {
-                        color: '#4A9B8E'
+                        color: '#1E90FF'
                     },
                     areaStyle: {
                         color: {
@@ -715,9 +715,9 @@
                             x2: 0,
                             y2: 1,
                             colorStops: [{
-                                offset: 0, color: 'rgba(74, 155, 142, 0.3)'
+                                offset: 0, color: 'rgba(30, 144, 255, 0.3)'
                             }, {
-                                offset: 1, color: 'rgba(74, 155, 142, 0.05)'
+                                offset: 1, color: 'rgba(30, 144, 255, 0.05)'
                             }]
                         }
                     }
