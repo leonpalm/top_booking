@@ -5,3 +5,4 @@ node_modules/
 .DS_Store
 # 若不想把大文件放入仓库可以在这里列出
 # media/*.mp4
+.env*.local
