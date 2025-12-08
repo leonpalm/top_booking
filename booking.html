@@ -551,7 +551,7 @@
                 
                 const card = document.createElement('div');
                 card.className = 'room-type-card';
-                card.onclick = () => selectRoomType(room.id, room.price);
+                card.onclick = (event) => selectRoomType(room.id, room.price, event);
                 card.innerHTML = `
                     <div class="flex items-center mb-3">
                         <div class="w-12 h-12 ${colors.bg} rounded-full flex items-center justify-center mr-4">
@@ -575,15 +575,16 @@
         }
 
         // Generate guest count options
-        function renderGuestOptions() {
+        function renderGuestOptions(maxGuests) {
             if (!roomConfig || !roomConfig.guestOptions) return;
             
             const select = document.getElementById('guestCount');
             select.innerHTML = '';
             
-            const { min, max, default: defaultValue } = roomConfig.guestOptions;
+            const { min, default: defaultValue } = roomConfig.guestOptions;
+            const actualMax = maxGuests || roomConfig.guestOptions.max;
             
-            for (let i = min; i <= max; i++) {
+            for (let i = min; i <= actualMax; i++) {
                 const option = document.createElement('option');
                 option.value = i;
                 option.textContent = i + '人';
@@ -751,7 +752,7 @@
         }
 
         // Select room type
-        function selectRoomType(type, price) {
+        function selectRoomType(type, price, event) {
             selectedRoomType = type;
             selectedRoomPrice = price;
             
@@ -760,6 +761,13 @@
                 card.classList.remove('selected');
             });
             event.currentTarget.classList.add('selected');
+            
+            // Get the selected room to update guest options
+            const selectedRoom = roomConfig?.roomTypes?.find(room => room.id === type);
+            if (selectedRoom) {
+                // Update guest options based on room's maxGuests
+                renderGuestOptions(selectedRoom.maxGuests);
+            }
             
             updatePrice();
         }
@@ -775,24 +783,100 @@
                 const checkout = new Date(checkoutDate);
                 const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
                 
-                let totalPrice = selectedRoomPrice * nights;
+                let totalPrice = 0;
+                let extraFee = 0;
                 
-                // Additional fee for extra guests (from config)
-                const pricing = roomConfig?.pricing || { baseGuests: 2, extraGuestFee: 100, extraGuestFeePerNight: true };
-                if (guestCount > pricing.baseGuests) {
-                    const extraGuests = guestCount - pricing.baseGuests;
-                    if (pricing.extraGuestFeePerNight) {
-                        totalPrice += extraGuests * pricing.extraGuestFee * nights;
+                // 获取配置
+                const pricing = roomConfig?.pricing || { baseGuests: 4, extraGuestFee: 50, extraGuestFeePerNight: true };
+                const longStay = roomConfig?.longStay || {};
+                const guestCountInt = parseInt(guestCount);
+                
+                // 找到当前选择的房型
+                const selectedRoom = roomConfig?.roomTypes?.find(room => room.id === selectedRoomType);
+                const roomWeeklyPrices = selectedRoom?.weeklyPrices || {};
+                
+                // 日价逻辑 - 根据每天的星期几计算价格
+                if (nights < 7) {
+                    // 计算每天的价格
+                    let dailyTotal = 0;
+                    const currentDate = new Date(checkin);
+                    
+                    for (let i = 0; i < nights; i++) {
+                        const dayOfWeek = getDayOfWeekName(currentDate.getDay());
+                        const dayPrice = roomWeeklyPrices[dayOfWeek] || selectedRoomPrice;
+                        dailyTotal += dayPrice;
+                        
+                        // 前进一天
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    
+                    totalPrice = dailyTotal;
+                } else {
+                    // 长住阶梯价逻辑
+                    const basePrice = selectedRoomPrice;
+                    
+                    if (nights >= 90 && longStay['90_plus']) {
+                        // 90晚以上 - 季度价
+                        const factor = longStay['90_plus'].monthPrice;
+                        const monthDays = 30;
+                        const months = Math.ceil(nights / monthDays);
+                        totalPrice = basePrice * monthDays * factor * months;
+                    } else if (nights >= 30 && longStay['30_89']) {
+                        // 30-89晚 - 月价
+                        const factor = longStay['30_89'].monthPrice;
+                        const monthDays = 30;
+                        const months = Math.ceil(nights / monthDays);
+                        totalPrice = basePrice * monthDays * factor * months;
+                    } else if (nights >= 7 && longStay['7_29']) {
+                        // 7-29晚 - 周价
+                        const factor = longStay['7_29'].weekPrice;
+                        const weekDays = 7;
+                        const weeks = Math.ceil(nights / weekDays);
+                        totalPrice = basePrice * weekDays * factor * weeks;
                     } else {
-                        totalPrice += extraGuests * pricing.extraGuestFee;
+                        // 7-30晚但没有长住折扣，按每天价格计算
+                        let dailyTotal = 0;
+                        const currentDate = new Date(checkin);
+                        
+                        for (let i = 0; i < nights; i++) {
+                            const dayOfWeek = getDayOfWeekName(currentDate.getDay());
+                            const dayPrice = roomWeeklyPrices[dayOfWeek] || selectedRoomPrice;
+                            dailyTotal += dayPrice;
+                            
+                            // 前进一天
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+                        
+                        totalPrice = dailyTotal;
                     }
                 }
                 
-                document.getElementById('currentPrice').textContent = '¥' + totalPrice;
+                // 额外客人费用
+                // 使用房型特定的baseGuests，如果没有则使用全局默认值
+                const roomBaseGuests = selectedRoom?.baseGuests || pricing.baseGuests;
+                if (guestCountInt > roomBaseGuests) {
+                    const extraGuests = guestCountInt - roomBaseGuests;
+                    if (pricing.extraGuestFeePerNight) {
+                        extraFee = extraGuests * pricing.extraGuestFee * nights;
+                    } else {
+                        extraFee = extraGuests * pricing.extraGuestFee;
+                    }
+                }
+                
+                // 计算总价
+                const finalPrice = Math.round(totalPrice + extraFee);
+                
+                document.getElementById('currentPrice').textContent = '¥' + finalPrice;
                 document.getElementById('priceDetails').textContent = 
                     getRoomTypeName(selectedRoomType) + ' · ' +
                     nights + '晚 · ' + guestCount + '人';
             }
+        }
+        
+        // 获取星期几的英文名称
+        function getDayOfWeekName(dayIndex) {
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            return days[dayIndex];
         }
 
         // Navigation functions
@@ -1044,19 +1128,89 @@
                 const checkin = new Date(checkinDate);
                 const checkout = new Date(checkoutDate);
                 const nights = Math.max(1, Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24)));
-                let totalPrice = selectedRoomPrice * nights;
                 
-                // Additional fee for extra guests (from config)
-                const pricing = roomConfig?.pricing || { baseGuests: 2, extraGuestFee: 100, extraGuestFeePerNight: true };
+                let totalPrice = 0;
+                let extraFee = 0;
+                
+                // 获取配置
+                const pricing = roomConfig?.pricing || { baseGuests: 4, extraGuestFee: 50, extraGuestFeePerNight: true };
+                const longStay = roomConfig?.longStay || {};
                 const guestCountInt = parseInt(guestCount);
-                if (guestCountInt > pricing.baseGuests) {
-                    const extraGuests = guestCountInt - pricing.baseGuests;
-                    if (pricing.extraGuestFeePerNight) {
-                        totalPrice += extraGuests * pricing.extraGuestFee * nights;
+                
+                // 找到当前选择的房型
+                const selectedRoom = roomConfig?.roomTypes?.find(room => room.id === selectedRoomType);
+                const roomWeeklyPrices = selectedRoom?.weeklyPrices || {};
+                
+                // 日价逻辑 - 根据每天的星期几计算价格
+                if (nights < 7) {
+                    // 计算每天的价格
+                    let dailyTotal = 0;
+                    const currentDate = new Date(checkin);
+                    
+                    for (let i = 0; i < nights; i++) {
+                        const dayOfWeek = getDayOfWeekName(currentDate.getDay());
+                        const dayPrice = roomWeeklyPrices[dayOfWeek] || selectedRoomPrice;
+                        dailyTotal += dayPrice;
+                        
+                        // 前进一天
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    
+                    totalPrice = dailyTotal;
+                } else {
+                    // 长住阶梯价逻辑
+                    const basePrice = selectedRoomPrice;
+                    
+                    if (nights >= 90 && longStay['90_plus']) {
+                        // 90晚以上 - 季度价
+                        const factor = longStay['90_plus'].monthPrice;
+                        const monthDays = 30;
+                        const months = Math.ceil(nights / monthDays);
+                        totalPrice = basePrice * monthDays * factor * months;
+                    } else if (nights >= 30 && longStay['30_89']) {
+                        // 30-89晚 - 月价
+                        const factor = longStay['30_89'].monthPrice;
+                        const monthDays = 30;
+                        const months = Math.ceil(nights / monthDays);
+                        totalPrice = basePrice * monthDays * factor * months;
+                    } else if (nights >= 7 && longStay['7_29']) {
+                        // 7-29晚 - 周价
+                        const factor = longStay['7_29'].weekPrice;
+                        const weekDays = 7;
+                        const weeks = Math.ceil(nights / weekDays);
+                        totalPrice = basePrice * weekDays * factor * weeks;
                     } else {
-                        totalPrice += extraGuests * pricing.extraGuestFee;
+                        // 7-30晚但没有长住折扣，按每天价格计算
+                        let dailyTotal = 0;
+                        const currentDate = new Date(checkin);
+                        
+                        for (let i = 0; i < nights; i++) {
+                            const dayOfWeek = getDayOfWeekName(currentDate.getDay());
+                            const dayPrice = roomWeeklyPrices[dayOfWeek] || selectedRoomPrice;
+                            dailyTotal += dayPrice;
+                            
+                            // 前进一天
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+                        
+                        totalPrice = dailyTotal;
                     }
                 }
+                
+                // 额外客人费用
+                // 使用房型特定的baseGuests，如果没有则使用全局默认值
+                const roomBaseGuests = selectedRoom?.baseGuests || pricing.baseGuests;
+                if (guestCountInt > roomBaseGuests) {
+                    const extraGuests = guestCountInt - roomBaseGuests;
+                    if (pricing.extraGuestFeePerNight) {
+                        extraFee = extraGuests * pricing.extraGuestFee * nights;
+                    } else {
+                        extraFee = extraGuests * pricing.extraGuestFee;
+                    }
+                }
+                
+                // 计算总价
+                totalPrice = Math.round(totalPrice + extraFee);
 
                 const idempotencyKey = 'web-' + Date.now().toString(36);
 

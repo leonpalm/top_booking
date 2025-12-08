@@ -1,44 +1,72 @@
 {
   "roomTypes": [
     {
-      "id": "standard",
-      "name": "标准间",
-      "price": 680,
-      "area": "25平方米",
-      "features": ["山景阳台"],
-      "description": "舒适的标准间，配备现代化设施，适合情侣或小家庭入住。",
+      "id": "two-room",
+      "name": "两房一卫",
+      "price": 200,
+      "area": "80平方米",
+      "features": ["两卧室", "一卫生间", "客厅", "厨房"],
+      "description": "舒适的两房一卫公寓，配备现代化设施，适合家庭入住。",
       "iconColor": "teal",
-      "maxGuests": 4
+      "maxGuests": 4,
+      "baseGuests": 2,
+      "weeklyPrices": {
+        "monday": 200,
+        "tuesday": 200,
+        "wednesday": 200,
+        "thursday": 200,
+        "friday": 280,
+        "saturday": 280,
+        "sunday": 200
+      }
     },
     {
-      "id": "deluxe",
-      "name": "豪华套房",
-      "price": 880,
-      "area": "40平方米",
-      "features": ["独立客厅"],
-      "description": "宽敞的豪华套房，带有独立客厅和用餐区，适合家庭或商务客人。",
+      "id": "three-room",
+      "name": "三房两卫",
+      "price": 280,
+      "area": "120平方米",
+      "features": ["三卧室", "两卫生间", "客厅", "厨房", "阳台"],
+      "description": "宽敞的三房两卫公寓，带有独立客厅和用餐区，适合大家庭入住。",
       "iconColor": "blue",
-      "maxGuests": 6
+      "maxGuests": 6,
+      "baseGuests": 4,
+      "weeklyPrices": {
+        "monday": 280,
+        "tuesday": 280,
+        "wednesday": 280,
+        "thursday": 280,
+        "friday": 380,
+        "saturday": 380,
+        "sunday": 280
+      }
     }
   ],
   "pricing": {
-    "baseGuests": 2,
-    "extraGuestFee": 100,
+    "baseGuests": 4,
+    "extraGuestFee": 50,
     "extraGuestFeePerNight": true
-  },
-  "weeklyPrices": {
-    "monday": 680,
-    "tuesday": 680,
-    "wednesday": 680,
-    "thursday": 680,
-    "friday": 780,
-    "saturday": 880,
-    "sunday": 880
   },
   "guestOptions": {
     "min": 1,
-    "max": 4,
+    "max": 6,
     "default": 2
+  },
+  "longStay": {
+    "7_29": {
+      "type": "week",
+      "weekPrice": 0.85,
+      "extraGuestDiscount": 0.5
+    },
+    "30_89": {
+      "type": "month",
+      "monthPrice": 0.7,
+      "extraGuestDiscount": 0.3
+    },
+    "90_plus": {
+      "type": "quarter",
+      "monthPrice": 0.6,
+      "extraGuestDiscount": 0
+    }
   }
 }
 

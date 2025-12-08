@@ -1,0 +1,44 @@
+{
+  "roomTypes": [
+    {
+      "id": "standard",
+      "name": "标准间",
+      "price": 680,
+      "area": "25平方米",
+      "features": ["山景阳台"],
+      "description": "舒适的标准间，配备现代化设施，适合情侣或小家庭入住。",
+      "iconColor": "teal",
+      "maxGuests": 4
+    },
+    {
+      "id": "deluxe",
+      "name": "豪华套房",
+      "price": 880,
+      "area": "40平方米",
+      "features": ["独立客厅"],
+      "description": "宽敞的豪华套房，带有独立客厅和用餐区，适合家庭或商务客人。",
+      "iconColor": "blue",
+      "maxGuests": 6
+    }
+  ],
+  "pricing": {
+    "baseGuests": 2,
+    "extraGuestFee": 100,
+    "extraGuestFeePerNight": true
+  },
+  "weeklyPrices": {
+    "monday": 680,
+    "tuesday": 680,
+    "wednesday": 680,
+    "thursday": 680,
+    "friday": 780,
+    "saturday": 880,
+    "sunday": 880
+  },
+  "guestOptions": {
+    "min": 1,
+    "max": 4,
+    "default": 2
+  }
+}
+
