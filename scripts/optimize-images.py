@@ -56,6 +56,17 @@ CONFIG = {
         'enabled': False,  # 设置为 True 启用
         'max_width': 1920,
         'max_height': 1080
+    },
+    
+    # 水印设置（可选）
+    'watermark': {
+        'enabled': True,  # 设置为 True 启用水印
+        'text': 'live2life.top 听海之音',  # 水印文字内容
+        'font_size': 50,  # 字体大小（增大）
+        'color': (255, 255, 255),  # 水印颜色 (RGB)
+        'opacity': 0.5,  # 透明度 (0-1)
+        'position': 'bottom-right',  # 水印位置: bottom-right, bottom-left, top-right, top-left
+        'margin': 50  # 距离边缘的边距（增大使文字上移）
     }
 }
 
@@ -117,6 +128,66 @@ def optimize_image(file_path):
                 if width > max_w or height > max_h:
                     img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
                     print(f"  📐 调整尺寸: {width}x{height} → {img.size[0]}x{img.size[1]}")
+            
+            # 添加水印（如果启用）
+            if CONFIG['watermark']['enabled']:
+                from PIL import ImageDraw, ImageFont
+                
+                draw = ImageDraw.Draw(img)
+                
+                # 尝试使用系统字体（先尝试中文，再尝试英文）
+                font = None
+                font_paths = [
+                    '/System/Library/Fonts/Hiragino Sans GB.ttc',  # macOS 中文黑体
+                    '/System/Library/Fonts/STHeiti Medium.ttc',    # macOS 中文黑体
+                    '/System/Library/Fonts/STHeiti Light.ttc',     # macOS 中文细体
+                    '/System/Library/Fonts/Arial.ttf',             # macOS 英文默认字体
+                    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',  # Linux
+                    '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',     # Linux 中文
+                ]
+                
+                for font_path in font_paths:
+                    try:
+                        font = ImageFont.truetype(font_path, CONFIG['watermark']['font_size'])
+                        break
+                    except (IOError, OSError):
+                        continue
+                
+                # 如果找不到系统字体，使用默认字体
+                if font is None:
+                    font = ImageFont.load_default()
+                    print(f"  ⚠️  使用默认字体: {font.getname()[0]}")
+                else:
+                    print(f"  ✏️  使用字体: {font.getname()[0]}")
+                
+                # 获取文字尺寸（使用 textbbox 以支持 Pillow 9.0+）
+                text = CONFIG['watermark']['text']
+                bbox = draw.textbbox((0, 0), text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                
+                # 计算水印位置
+                margin = CONFIG['watermark']['margin']
+                if CONFIG['watermark']['position'] == 'bottom-right':
+                    x = img.width - text_width - margin
+                    y = img.height - text_height - margin
+                elif CONFIG['watermark']['position'] == 'bottom-left':
+                    x = margin
+                    y = img.height - text_height - margin
+                elif CONFIG['watermark']['position'] == 'top-right':
+                    x = img.width - text_width - margin
+                    y = margin
+                else:  # top-left
+                    x = margin
+                    y = margin
+                
+                # 添加半透明文字
+                # 创建带有透明度的颜色（RGBA）
+                r, g, b = CONFIG['watermark']['color']
+                a = int(255 * CONFIG['watermark']['opacity'])
+                
+                draw.text((x, y), text, font=font, fill=(r, g, b, a))
+                print(f"  💧 添加水印: '{text}' 到 {CONFIG['watermark']['position']}")
             
             # 保存优化后的原格式
             if ext in ['.jpg', '.jpeg']:

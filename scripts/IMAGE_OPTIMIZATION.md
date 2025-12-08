@@ -138,6 +138,16 @@ CONFIG = {
         'enabled': False,
         'max_width': 1920,
         'max_height': 1080
+    },
+    # 水印设置（可选）
+    'watermark': {
+        'enabled': False,  # 设置为 True 启用水印
+        'text': '听海之音民宿',  # 水印文字内容
+        'font_size': 36,  # 字体大小
+        'color': (255, 255, 255),  # 水印颜色 (RGB)
+        'opacity': 0.5,  # 透明度 (0-1)
+        'position': 'bottom-right',  # 水印位置: bottom-right, bottom-left, top-right, top-left
+        'margin': 20  # 距离边缘的边距
     }
 }
 ```
@@ -148,22 +158,28 @@ CONFIG = {
    - 将原始图片放入 `media/gallery/` 目录
    - 确保文件名符合命名规范
 
-2. **运行优化脚本**
+2. **配置优化参数**
+   - 打开 `scripts/optimize-images.py`（或 `.js`）
+   - 根据需要调整图片质量、尺寸和水印设置
+
+3. **运行优化脚本**
    ```bash
    npm run optimize-images
    # 或
    python3 scripts/optimize-images.py
    ```
 
-3. **检查结果**
+4. **检查结果**
    - 脚本会自动创建备份（`media/gallery/backup/`）
    - 原文件会被优化后的版本替换
    - 如果启用 WebP，会生成 `.webp` 文件
+   - 如果启用水印，图片会自动添加水印
 
-4. **验证效果**
+5. **验证效果**
    - 检查文件大小是否减小
    - 在浏览器中查看图片质量
-   - 如有需要，调整质量参数重新优化
+   - 检查水印效果是否符合预期
+   - 如有需要，调整参数重新优化
 
 ## 🔄 工作流程建议
 
