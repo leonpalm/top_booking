@@ -53,6 +53,11 @@ class JingjiShanju {
         
         // 初始化图片画廊
         this.initializeGallery();
+        
+        // 暂时不使用Splitting，避免影响hero-text显示
+        // if (typeof Splitting !== 'undefined') {
+        //     Splitting();
+        // }
     }
 
     // 更新导航状态

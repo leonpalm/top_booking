@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="碧桂园十里银滩月租民宿，爱琴海大户型旅居公寓，提供三房两卫大客厅、可做饭、亲子阳台等设施，为您打造舒适的海边旅居体验。">
     <meta name="keywords" content="碧桂园十里银滩,月租民宿,爱琴海公寓,海边度假,旅居公寓,亲子民宿">
-    <title>碧桂园十里银滩月租民宿 - 爱琴海大户型旅居公寓｜三房两卫大客厅/可做饭/亲子阳台</title>
+    <title>碧桂园十里银滩月租民宿 - 爱琴海大户型公寓｜三房两卫/大客厅/可做饭/亲子阳台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://unpkg.com/splitting@1.0.6/dist/splitting.js"></script>
@@ -51,10 +51,16 @@
         }
         
         .gradient-text {
+            /* 恢复渐变文字效果，但确保有可靠的降级方案 */
+            color: var(--accent-color); /* 基础颜色，确保文字始终可见 */
             background: linear-gradient(135deg, var(--accent-color), #6BB6A8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            opacity: 1;
+            position: relative;
+            z-index: 10;
+            display: block;
         }
         
         .glass-effect {
@@ -116,6 +122,18 @@
             transform: scale(1.05);
         }
         
+        /* 添加hero-text的基本样式，确保文字可见 */
+        .hero-text {
+            font-size: 3rem; /* 大屏幕字体大小 */
+            color: var(--accent-color);
+            display: block;
+            opacity: 1;
+            position: relative;
+            z-index: 10;
+            margin: 0;
+            padding: 0;
+        }
+        
         @media (max-width: 768px) {
             .hero-text {
                 font-size: 2rem;
@@ -134,8 +152,8 @@
         <div class="content-overlay flex items-center justify-center min-h-screen px-4">
             <div class="text-center max-w-4xl mx-auto">
                 <div class="glass-effect rounded-3xl p-8 md:p-12">
-                    <h1 class="font-display text-4xl md:text-6xl font-bold mb-4 gradient-text hero-text" data-splitting>
-                        听海之音
+                    <h1 class="font-display text-4xl md:text-6xl font-bold mb-4 gradient-text hero-text">
+                        live2life.top 听海之音
                     </h1>
                     <p class="text-lg md:text-xl mb-8 text-gray-600 hero-subtitle max-w-2xl mx-auto">
                         在海边的品质空间，寻找海的宁静与自然和谐<br><br>碧桂园十里银滩 - 大户型公寓｜月租民宿<br>适合一家人旅居度假，三房两卫大面积客厅/可做饭/亲子双阳台    
@@ -161,7 +179,7 @@
                     关于听海之音
                 </h2>
                 <p class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                    坐落于海山之间，该套大面积公寓位于碧桂园十里银滩的核心区域的爱琴海小区，为旅居的客人和家庭提供一个亲近大海、回归本真的栖息之所。在这里，时间仿佛放慢了脚步，让您重新发现生活的美好。
+                    坐落于海山之间，该套大面积公寓位于碧桂园十里银滩的核心区域的爱琴海小区，为旅居的客人和家庭提供一个亲近大海与山林、回归本真的栖息之所。
                 </p>
             </div>
             
@@ -207,7 +225,7 @@
                     空间预览
                 </h2>
                 <p class="text-lg text-gray-600">
-                    感受我们为旅居家庭精心设计的每一个空间
+                    感受我们为旅居家庭设计和布置的空间
                 </p>
             </div>
             
@@ -256,7 +274,7 @@
             <div class="bg-white rounded-2xl p-8 shadow-lg">
                 <div class="text-4xl text-blue-500 mb-4">"</div>
                 <p class="text-lg text-gray-600 mb-6 italic">
-                    "这是我住过最舒适的度假公寓，真心适合一家人海边旅居，不像酒店在这里有住家的感觉，而且每个人都有自己的独立空间，非常方便。清晨海边微风唤醒，夜晚在星空下入睡，完美的度假体验。"
+                    "真心适合一家人海边旅居，亲近自然的同时又有住家的感觉，每个人都有自己的独立空间，非常方便。"
                 </p>
                 <div class="flex items-center justify-center">
                     <img src="media/guest.png" alt="李女士" class="w-16 h-16 rounded-full mr-4 object-cover">
@@ -297,51 +315,36 @@
     <div class="h-20"></div>
 
     <script>
-        // Initialize animations
+        // 恢复页面动画代码，但暂时不使用Splitting
         document.addEventListener('DOMContentLoaded', function() {
-            // Text splitting animation
-            Splitting();
-            
-            // Hero text animation
-            anime({
-                targets: '.hero-text .char',
-                translateY: [100, 0],
-                opacity: [0, 1],
-                easing: 'easeOutExpo',
-                duration: 1400,
-                delay: (el, i) => 30 * i
-            });
-            
-            // Hero subtitle animation
+            // Hero Subtitle Animation
             anime({
                 targets: '.hero-subtitle',
-                translateY: [50, 0],
+                translateY: [20, 0],
                 opacity: [0, 1],
-                easing: 'easeOutExpo',
                 duration: 1000,
-                delay: 800
+                delay: 800,
+                easing: 'easeOutExpo'
             });
-            
-            // Feature cards animation
+
+            // Feature Cards Animation
             anime({
                 targets: '.feature-card',
                 translateY: [50, 0],
                 opacity: [0, 1],
-                easing: 'easeOutExpo',
                 duration: 800,
-                delay: (el, i) => 200 * i,
-                delay: 1200
+                delay: 1200,
+                easing: 'easeOutExpo'
             });
-            
-            // Preview images animation
+
+            // Preview Image Animation
             anime({
                 targets: '.preview-image',
-                scale: [0.8, 1],
+                scale: [0.95, 1],
                 opacity: [0, 1],
-                easing: 'easeOutExpo',
                 duration: 600,
-                delay: (el, i) => 100 * i,
-                delay: 1600
+                delay: 1600,
+                easing: 'easeOutExpo'
             });
         });
         
@@ -406,6 +409,14 @@
         }
         
         createParticles();
+    </script>
+    <script>
+        // 确保splitting.js在所有资源加载完成后初始化
+        window.onload = function() {
+            if (typeof Splitting !== 'undefined') {
+                Splitting();
+            }
+        };
     </script>
 </body>
 </html>
